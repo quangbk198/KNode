@@ -1,4 +1,4 @@
-from droidlens.cli import cli
+from knode.cli import cli
 
 if __name__ == "__main__":
     cli()

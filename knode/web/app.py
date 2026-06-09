@@ -1,6 +1,6 @@
 """
 FastAPI web server — serves the graph browser UI and REST API.
-Run via:  droidlens serve --project <path> [--port 7070]
+Run via:  knode serve --project <path> [--port 7070]
 """
 import json
 from pathlib import Path
@@ -12,8 +12,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from droidlens.graph.storage import GraphStorage, get_db_path
-from droidlens.graph.models import NodeType, EdgeType
+from knode.graph.storage import GraphStorage, get_db_path
+from knode.graph.models import NodeType, EdgeType
 
 _storage: GraphStorage | None = None
 _project_path: str = ""
@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
         _storage.close()
 
 
-app = FastAPI(title="DroidLens Graph Browser", lifespan=lifespan)
+app = FastAPI(title="KNode Graph Browser", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -199,7 +199,7 @@ def api_index(req: IndexRequest):
     if not p.exists():
         raise HTTPException(status_code=400, detail=f"Path not found: {req.project_path}")
 
-    from droidlens.indexer.graph_builder import build_graph
+    from knode.indexer.graph_builder import build_graph
     if _storage:
         _storage.close()
     _storage = build_graph(req.project_path)
@@ -229,7 +229,7 @@ def create_app(project_path: str) -> FastAPI:
     db_path = get_db_path(project_path)
     if not Path(db_path).exists():
         raise FileNotFoundError(
-            f"No index found. Run `droidlens index \"{project_path}\"` first."
+            f"No index found. Run `knode index \"{project_path}\"` first."
         )
     _storage = GraphStorage(db_path)
     _storage.connect()

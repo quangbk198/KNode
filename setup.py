@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="droidlens",
+    name="knode",
     version="0.1.0",
     description="Knowledge graph indexer for Android codebases (Java/Kotlin)",
     packages=find_packages(),
@@ -20,7 +20,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "droidlens=droidlens.cli:cli",
+            "knode=knode.cli:cli",
         ],
     },
 )

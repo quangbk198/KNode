@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-DroidLens Global Registry
+KNode Global Registry
 
-Maintains ~/.droidlens/registry.json — a map of
+Maintains ~/.knode/registry.json — a map of
   project_name -> { "path": "<abs_path>", "db": "<abs_db_path>", "indexed_at": "..." }
 
-This lets `droidlens mcp` start without a --project flag and serve
+This lets `knode mcp` start without a --project flag and serve
 ALL previously-indexed projects, just like GitNexus.
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Optional
 
 # Global registry file location
-_REGISTRY_DIR = Path.home() / ".droidlens"
+_REGISTRY_DIR = Path.home() / ".knode"
 _REGISTRY_FILE = _REGISTRY_DIR / "registry.json"
 
 
@@ -68,7 +68,7 @@ def get_db_for_project(name_or_path: str) -> Optional[str]:
     Lookup order:
       1. Exact name key match in registry
       2. Path match (resolved absolute path)
-      3. Nearest .droidlens/graph.db found by walking up from cwd
+      3. Nearest .knode/graph.db found by walking up from cwd
     """
     registry = _load()
 
@@ -87,7 +87,7 @@ def get_db_for_project(name_or_path: str) -> Optional[str]:
 
 
 def get_nearest_db() -> Optional[str]:
-    """Walk up from cwd looking for .droidlens/graph.db.
+    """Walk up from cwd looking for .knode/graph.db.
     Returns the DB path string, or None."""
     return _find_nearest_db()
 
@@ -123,10 +123,10 @@ def _save(registry: dict) -> None:
 
 
 def _find_nearest_db() -> Optional[str]:
-    """Walk up directory tree from cwd looking for .droidlens/graph.db."""
+    """Walk up directory tree from cwd looking for .knode/graph.db."""
     current = Path(os.getcwd()).resolve()
     for candidate in [current, *current.parents]:
-        db = candidate / ".droidlens" / "graph.db"
+        db = candidate / ".knode" / "graph.db"
         if db.exists():
             return str(db)
     return None

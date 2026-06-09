@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-DroidLens CLI
+KNode CLI
 
 Commands:
-  droidlens index <path>              Index an Android project
-  droidlens serve --project <path>    Launch the graph browser UI
-  droidlens mcp   --project <path>    Start the MCP stdio server
-  droidlens stats --project <path>    Print graph statistics
+  knode index <path>              Index an Android project
+  knode serve --project <path>    Launch the graph browser UI
+  knode mcp   --project <path>    Start the MCP stdio server
+  knode stats --project <path>    Print graph statistics
 """
 import click
 import uvicorn
@@ -14,15 +14,15 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from droidlens import __version__
+from knode import __version__
 
 console = Console()
 
 
 @click.group()
-@click.version_option(__version__, prog_name="DroidLens")
+@click.version_option(__version__, prog_name="KNode")
 def cli():
-    """[DroidLens] Knowledge graph for Android codebases."""
+    """[KNode] Knowledge graph for Android codebases."""
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -37,13 +37,13 @@ def index(project_path: str):
     project_path = os.path.abspath(project_path)
 
     console.print(Panel.fit(
-        f"[bold cyan]DroidLens[/bold cyan]  v{__version__}\n"
+        f"[bold cyan]KNode[/bold cyan]  v{__version__}\n"
         f"[dim]Indexing:[/dim] [white]{project_path}[/white]",
         border_style="cyan",
     ))
 
-    from droidlens.indexer.graph_builder import build_graph
-    from droidlens.graph.storage import get_db_path
+    from knode.indexer.graph_builder import build_graph
+    from knode.graph.storage import get_db_path
     storage = build_graph(project_path)
     stats = storage.get_stats()
     storage.close()
@@ -60,28 +60,28 @@ def index(project_path: str):
 
     # ── Register in global registry ───────────────────────────────────────────
     try:
-        from droidlens.registry import register
+        from knode.registry import register
         project_name = register(project_path, get_db_path(project_path))
         console.print(
             f"[bold green]✓[/bold green] Registered [cyan]{project_name}[/cyan] "
-            "in global registry [dim](~/.droidlens/registry.json)[/dim]"
+            "in global registry [dim](~/.knode/registry.json)[/dim]"
         )
     except Exception as exc:  # noqa: BLE001
         console.print(f"[yellow]⚠ Could not register project: {exc}[/yellow]")
 
-    # ── Scaffold .agents/skills/droidlens/ and AGENTS.md ─────────────────────
+    # ── Scaffold .agents/skills/knode/ and AGENTS.md ─────────────────────
     try:
-        from droidlens.scaffold import scaffold_project
+        from knode.scaffold import scaffold_project
         scaffold_project(project_path)
         console.print(
             "[bold green]✓[/bold green] Scaffolded "
-            "[cyan].agents/skills/droidlens/[/cyan] and updated "
+            "[cyan].agents/skills/knode/[/cyan] and updated "
             "[cyan]AGENTS.md[/cyan]"
         )
     except Exception as exc:  # noqa: BLE001
         console.print(f"[yellow]⚠ Could not scaffold agent files: {exc}[/yellow]")
 
-    console.print(f"\n[bold green]Done![/bold green] Run [cyan]droidlens serve --project \"{project_path}\"[/cyan] to explore.")
+    console.print(f"\n[bold green]Done![/bold green] Run [cyan]knode serve --project \"{project_path}\"[/cyan] to explore.")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ def serve(project: str, port: int, host: str):
     import os, webbrowser, threading, time
     project = os.path.abspath(project)
 
-    from droidlens.web.app import create_app
+    from knode.web.app import create_app
     try:
         web_app = create_app(project)
     except FileNotFoundError as e:
@@ -106,7 +106,7 @@ def serve(project: str, port: int, host: str):
 
     url = f"http://{host}:{port}"
     console.print(Panel.fit(
-        f"[bold cyan]DroidLens Graph Browser[/bold cyan]\n"
+        f"[bold cyan]KNode Graph Browser[/bold cyan]\n"
         f"[dim]Project:[/dim] [white]{project}[/white]\n"
         f"[dim]URL:[/dim]     [link={url}]{url}[/link]",
         border_style="cyan",
@@ -132,7 +132,7 @@ def mcp(project: str | None):
     import os
     if project:
         project = os.path.abspath(project)
-    from droidlens.mcp_server.server import main as mcp_main
+    from knode.mcp_server.server import main as mcp_main
     mcp_main(project)
 
 
@@ -146,12 +146,12 @@ def stats(project: str):
     """Print statistics for an indexed project."""
     import os
     from pathlib import Path
-    from droidlens.graph.storage import GraphStorage, get_db_path
+    from knode.graph.storage import GraphStorage, get_db_path
 
     project = os.path.abspath(project)
     db_path = get_db_path(project)
     if not Path(db_path).exists():
-        console.print(f"[red]✗ No index found. Run `droidlens index \"{project}\"` first.[/red]")
+        console.print(f"[red]✗ No index found. Run `knode index \"{project}\"` first.[/red]")
         raise SystemExit(1)
 
     with GraphStorage(db_path) as st:
@@ -180,11 +180,11 @@ def stats(project: str):
 def list_projects():
     """List all indexed projects in the global registry."""
     from pathlib import Path as _Path
-    from droidlens.registry import list_projects as _list
+    from knode.registry import list_projects as _list
 
     projects = _list()
     if not projects:
-        console.print("[yellow]No projects registered. Run `droidlens index <path>` first.[/yellow]")
+        console.print("[yellow]No projects registered. Run `knode index <path>` first.[/yellow]")
         return
 
     table = Table(title="Registered Projects", border_style="cyan", show_header=True)
@@ -219,7 +219,7 @@ def clean(all_projects: bool, force: bool, project_path: str):
     import os
     import shutil
     from pathlib import Path
-    from droidlens.registry import list_projects as _list, unregister, _REGISTRY_FILE
+    from knode.registry import list_projects as _list, unregister, _REGISTRY_FILE
 
     if all_projects:
         if not force:
@@ -228,13 +228,13 @@ def clean(all_projects: bool, force: bool, project_path: str):
         projects = _list()
         for name, info in projects.items():
             db_path = Path(info["db"])
-            droidlens_dir = db_path.parent
-            if droidlens_dir.exists() and droidlens_dir.name == ".droidlens":
+            knode_dir = db_path.parent
+            if knode_dir.exists() and knode_dir.name == ".knode":
                 try:
-                    shutil.rmtree(droidlens_dir)
-                    console.print(f"[dim]Removed directory: {droidlens_dir}[/dim]")
+                    shutil.rmtree(knode_dir)
+                    console.print(f"[dim]Removed directory: {knode_dir}[/dim]")
                 except Exception as e:
-                    console.print(f"[yellow]Could not remove {droidlens_dir}: {e}[/yellow]")
+                    console.print(f"[yellow]Could not remove {knode_dir}: {e}[/yellow]")
             unregister(info["path"])
 
         if _REGISTRY_FILE.exists():
@@ -246,22 +246,22 @@ def clean(all_projects: bool, force: bool, project_path: str):
         console.print("[bold green]✓ Deleted all indexes and cleared registry.[/bold green]")
     else:
         project_path = os.path.abspath(project_path)
-        from droidlens.graph.storage import get_db_path
+        from knode.graph.storage import get_db_path
         db_path = Path(get_db_path(project_path))
-        droidlens_dir = db_path.parent
+        knode_dir = db_path.parent
 
-        if not droidlens_dir.exists():
+        if not knode_dir.exists():
             console.print(f"[yellow]No index found for project at {project_path}[/yellow]")
             return
 
         if not force:
-            click.confirm(f"This will delete the index at {droidlens_dir}. Continue?", abort=True)
+            click.confirm(f"This will delete the index at {knode_dir}. Continue?", abort=True)
 
         try:
-            shutil.rmtree(droidlens_dir)
-            console.print(f"[dim]Removed directory: {droidlens_dir}[/dim]")
+            shutil.rmtree(knode_dir)
+            console.print(f"[dim]Removed directory: {knode_dir}[/dim]")
         except Exception as e:
-            console.print(f"[red]Could not remove {droidlens_dir}: {e}[/red]")
+            console.print(f"[red]Could not remove {knode_dir}: {e}[/red]")
             return
 
         unregister(project_path)

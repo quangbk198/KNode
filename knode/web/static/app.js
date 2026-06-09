@@ -1,4 +1,4 @@
-/* ── DroidLens Graph Browser — Frontend (Sigma.js + Graphology) ── */
+/* ── KNode Graph Browser — Frontend (Sigma.js + Graphology) ── */
 import Graph from 'https://esm.sh/graphology';
 import forceAtlas2 from 'https://esm.sh/graphology-layout-forceatlas2';
 import FA2Layout from 'https://esm.sh/graphology-layout-forceatlas2/worker';
@@ -780,18 +780,18 @@ function setTheme(theme) {
     document.documentElement.setAttribute("data-theme", "light");
     iconSun.style.display = "none"; iconMoon.style.display = "block";
     document.getElementById("hljs-theme").href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css";
-    localStorage.setItem("droidlens-theme", "light");
+    localStorage.setItem("KNode-theme", "light");
   } else {
     document.documentElement.removeAttribute("data-theme");
     iconSun.style.display = "block"; iconMoon.style.display = "none";
     document.getElementById("hljs-theme").href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css";
-    localStorage.setItem("droidlens-theme", "dark");
+    localStorage.setItem("KNode-theme", "dark");
   }
 }
 themeBtn.addEventListener("click", () => {
   setTheme(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light");
 });
-const savedTheme = localStorage.getItem("droidlens-theme");
+const savedTheme = localStorage.getItem("KNode-theme");
 if (savedTheme) setTheme(savedTheme);
 
 // Resizers

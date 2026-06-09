@@ -1,6 +1,6 @@
 """
-SQLite-backed storage for the DroidLens knowledge graph.
-All data is stored in .droidlens/graph.db inside the indexed project.
+SQLite-backed storage for the KNode knowledge graph.
+All data is stored in .knode/graph.db inside the indexed project.
 """
 import json
 import sqlite3
@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 
-from droidlens.graph.models import Node, Edge, NodeType, EdgeType, ProjectInfo
+from knode.graph.models import Node, Edge, NodeType, EdgeType, ProjectInfo
 
 
 class GraphStorage:
@@ -252,4 +252,4 @@ class GraphStorage:
 
 
 def get_db_path(project_path: str) -> str:
-    return str(Path(project_path) / ".droidlens" / "graph.db")
+    return str(Path(project_path) / ".knode" / "graph.db")

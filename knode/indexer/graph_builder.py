@@ -8,16 +8,16 @@ from typing import Callable, Optional
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 
-from droidlens.indexer.scanner import scan_sources, count_sources
-from droidlens.indexer.java_parser import parse_java_file
-from droidlens.indexer.kotlin_parser import parse_kotlin_file
-from droidlens.graph.storage import GraphStorage, get_db_path
+from knode.indexer.scanner import scan_sources, count_sources
+from knode.indexer.java_parser import parse_java_file
+from knode.indexer.kotlin_parser import parse_kotlin_file
+from knode.graph.storage import GraphStorage, get_db_path
 
 console = Console(stderr=True)
 
 def _update_gitignore(project_path: str):
     gitignore_path = Path(project_path) / ".gitignore"
-    entry = ".droidlens/"
+    entry = ".knode/"
     if gitignore_path.exists():
         try:
             content = gitignore_path.read_text(encoding="utf-8")
@@ -44,7 +44,7 @@ def _resolve_cross_file_calls(storage: GraphStorage):
     """
     import hashlib
     import json
-    from droidlens.graph.models import Edge, EdgeType
+    from knode.graph.models import Edge, EdgeType
 
     # Ignore very common standard library/framework method names that cause false positive links
     IGNORE_METHODS = {
@@ -163,7 +163,7 @@ def _resolve_cross_file_reads(storage: GraphStorage):
        (avoids false-positive links when the name is common).
     """
     import hashlib
-    from droidlens.graph.models import Edge, EdgeType, NodeType
+    from knode.graph.models import Edge, EdgeType, NodeType
 
     # ── Collect placeholder property refs (no file_path) ──────────────────
     prop_refs = {
@@ -246,7 +246,7 @@ def _resolve_cross_file_reads(storage: GraphStorage):
 def _resolve_cross_file_types(storage: GraphStorage):
     """Link abstract type refs to concrete classes/interfaces across the entire project."""
     import hashlib
-    from droidlens.graph.models import Edge, EdgeType
+    from knode.graph.models import Edge, EdgeType
 
     abstract_types = {
         n.id: n.name 
@@ -355,7 +355,7 @@ def build_graph(
     storage.set_project_info("indexed_at", datetime.now(timezone.utc).isoformat())
     storage.set_project_info("stats", stats)
 
-    # Automatically add .droidlens/ to .gitignore
+    # Automatically add .knode/ to .gitignore
     _update_gitignore(project_path)
 
     return storage

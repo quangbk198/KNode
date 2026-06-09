@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Generator, Tuple
 
 SKIP_DIRS = {
-    "build", ".gradle", ".idea", ".git", ".droidlens",
+    "build", ".gradle", ".idea", ".git", ".knode",
     "generated", "intermediates", "outputs", "__pycache__",
     "node_modules", ".cxx",
 }

@@ -1,9 +1,9 @@
 """
-DroidLens MCP Server — exposes the knowledge graph as MCP tools
+KNode MCP Server — exposes the knowledge graph as MCP tools
 so AI agents can query any indexed Android project.
 
-Run via:  droidlens mcp
-          droidlens mcp --project <path>   (optional: pin to one project)
+Run via:  knode mcp
+          knode mcp --project <path>   (optional: pin to one project)
 Or add to Claude Desktop / Cursor config as a stdio server (no --project needed).
 """
 import asyncio
@@ -15,10 +15,10 @@ import mcp.types as types
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
-from droidlens.graph.storage import GraphStorage, get_db_path
-from droidlens.graph.models import NodeType, EdgeType
+from knode.graph.storage import GraphStorage, get_db_path
+from knode.graph.models import NodeType, EdgeType
 
-app = Server("droidlens")
+app = Server("knode")
 
 # Registry of loaded projects: {name -> GraphStorage}
 _projects: dict[str, GraphStorage] = {}
@@ -33,7 +33,7 @@ def _get_storage(project: Optional[str] = None) -> GraphStorage:
     if _projects:
         return next(iter(_projects.values()))
     raise RuntimeError(
-        "No project loaded. Run `droidlens index <path>` first, "
+        "No project loaded. Run `knode index <path>` first, "
         "or pass project_name to the tool."
     )
 
@@ -131,7 +131,7 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="list_projects",
-            description="List all indexed Android projects registered with DroidLens.",
+            description="List all indexed Android projects registered with KNode.",
             inputSchema={"type": "object", "properties": {}, "required": []},
         ),
         types.Tool(
@@ -207,7 +207,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
 
     # list_projects and switch_project don't need a storage handle
     if name == "list_projects":
-        from droidlens.registry import list_projects as _lp
+        from knode.registry import list_projects as _lp
         result = []
         for pname, info in _lp().items():
             result.append({
@@ -224,13 +224,13 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
         target = arguments.get("name", "")
         if target not in _projects:
             # Try to load it
-            from droidlens.registry import list_projects as _lp
+            from knode.registry import list_projects as _lp
             reg = _lp()
             if target not in reg:
                 return text({"error": f"Project '{target}' not found in registry."})
             db = reg[target]["db"]
             if not Path(db).exists():
-                return text({"error": f"DB for '{target}' missing. Re-run `droidlens index`." })
+                return text({"error": f"DB for '{target}' missing. Re-run `knode index`." })
             storage = GraphStorage(db)
             storage.connect()
             _projects[target] = storage
@@ -360,8 +360,8 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
             project_path = arguments.get("project_path", "")
             if not Path(project_path).exists():
                 return text({"error": f"Path '{project_path}' does not exist."})
-            from droidlens.indexer.graph_builder import build_graph
-            from droidlens.registry import register
+            from knode.indexer.graph_builder import build_graph
+            from knode.registry import register
             # Close old storage for this project if open
             pname = Path(project_path).name
             if pname in _projects:
@@ -456,12 +456,12 @@ async def run_server(project_path: str | None = None):
     """Start the MCP server.
 
     If *project_path* is given, only that project is loaded.
-    Otherwise ALL projects from ~/.droidlens/registry.json are loaded,
+    Otherwise ALL projects from ~/.knode/registry.json are loaded,
     and the nearest one (by cwd) becomes the active project.
     """
     global _active_project
 
-    from droidlens.registry import get_all_db_paths, get_nearest_db, list_projects as _lp
+    from knode.registry import get_all_db_paths, get_nearest_db, list_projects as _lp
 
     if project_path:
         # Pinned to one project
@@ -469,7 +469,7 @@ async def run_server(project_path: str | None = None):
         if not Path(db_path).exists():
             raise FileNotFoundError(
                 f"No index found at '{db_path}'.\n"
-                f"Run `droidlens index \"{project_path}\"` first."
+                f"Run `knode index \"{project_path}\"` first."
             )
         pname = Path(project_path).name
         storage = GraphStorage(db_path)

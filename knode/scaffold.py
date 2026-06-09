@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-DroidLens Scaffold
+KNode Scaffold
 
-After a successful `droidlens index`, this module:
-  1. Creates .agents/skills/droidlens/ with all skill SKILL.md files.
-  2. Creates or updates AGENTS.md with a <!-- droidlens:start/end --> block.
+After a successful `KNode index`, this module:
+  1. Creates .agents/skills/KNode/ with all skill SKILL.md files.
+  2. Creates or updates AGENTS.md with a <!-- KNode:start/end --> block.
 """
 from __future__ import annotations
 
@@ -16,29 +16,29 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 SKILLS: dict[str, dict[str, str]] = {
-    "droidlens-cli": {
-        "name": "droidlens-cli",
+    "KNode-cli": {
+        "name": "KNode-cli",
         "description": (
-            'Use when the user needs to run DroidLens CLI commands like index a project, '
+            'Use when the user needs to run KNode CLI commands like index a project, '
             'serve the graph browser, start the MCP server, or check stats. '
             'Examples: "Index this Android project", "Start the graph browser", "Show graph stats"'
         ),
         "content": """\
-# DroidLens CLI Commands
+# KNode CLI Commands
 
-All commands work via the `droidlens` entry-point (installed with `pip install -e .`).
+All commands work via the `KNode` entry-point (installed with `pip install -e .`).
 
 ## Commands
 
 ### index — Build or refresh the knowledge graph
 
 ```bash
-droidlens index <path>
-droidlens index .          # index current directory
+KNode index <path>
+KNode index .          # index current directory
 ```
 
 Parses all Java/Kotlin source files under `<path>`, builds the knowledge graph, writes it to
-`.droidlens/graph.db`, and scaffolds `.agents/skills/droidlens/` + updates `AGENTS.md`.
+`.KNode/graph.db`, and scaffolds `.agents/skills/KNode/` + updates `AGENTS.md`.
 
 | Flag     | Effect                                   |
 | -------- | ---------------------------------------- |
@@ -52,8 +52,8 @@ reports the index is stale.
 ### serve — Launch the graph browser UI
 
 ```bash
-droidlens serve --project <path>
-droidlens serve --project . --port 8080
+KNode serve --project <path>
+KNode serve --project . --port 8080
 ```
 
 Opens a browser-based interactive graph at `http://127.0.0.1:7070` (default port).
@@ -69,18 +69,18 @@ Opens a browser-based interactive graph at `http://127.0.0.1:7070` (default port
 ### mcp — Start the MCP stdio server
 
 ```bash
-droidlens mcp --project <path>
+KNode mcp --project <path>
 ```
 
 Starts a Model Context Protocol stdio server so AI agents (Claude, etc.) can call
-DroidLens tools directly.  The `--project` flag is optional; tools can index on demand.
+KNode tools directly.  The `--project` flag is optional; tools can index on demand.
 
 ---
 
 ### stats — Print graph statistics
 
 ```bash
-droidlens stats --project <path>
+KNode stats --project <path>
 ```
 
 Shows node/edge counts, breakdown by type, and when the project was last indexed.
@@ -90,8 +90,8 @@ Shows node/edge counts, breakdown by type, and when the project was last indexed
 ### clean — Delete graph indexes
 
 ```bash
-droidlens clean <path>
-droidlens clean --all --force
+KNode clean <path>
+KNode clean --all --force
 ```
 
 Deletes the index for the specified project, or all projects if `--all` is used. Use this to clear stale databases or reset the global registry.
@@ -100,27 +100,27 @@ Deletes the index for the specified project, or all projects if `--all` is used.
 
 ## After Indexing
 
-1. Run `droidlens serve --project <path>` to explore the graph visually
-2. Or start `droidlens mcp --project <path>` for AI agent integration
-3. Use the other DroidLens skills (`exploring`, `debugging`, `impact-analysis`, `refactoring`)
+1. Run `KNode serve --project <path>` to explore the graph visually
+2. Or start `KNode mcp --project <path>` for AI agent integration
+3. Use the other KNode skills (`exploring`, `debugging`, `impact-analysis`, `refactoring`)
 
 ## Troubleshooting
 
-- **"No index found"**: Run `droidlens index <path>` first
+- **"No index found"**: Run `KNode index <path>` first
 - **Port already in use**: Pass `--port <other>` to `serve`
-- **Graph appears stale**: Re-run `droidlens index <path>` then restart `droidlens mcp`
+- **Graph appears stale**: Re-run `KNode index <path>` then restart `KNode mcp`
 """,
     },
 
-    "droidlens-exploring": {
-        "name": "droidlens-exploring",
+    "KNode-exploring": {
+        "name": "KNode-exploring",
         "description": (
             'Use when the user asks how Android code works, wants to understand class '
             'hierarchies, call chains, or module structure. '
             'Examples: "How does X work?", "What calls this method?", "Show me the auth flow"'
         ),
         "content": """\
-# Exploring Android Codebases with DroidLens
+# Exploring Android Codebases with KNode
 
 ## When to Use
 
@@ -133,49 +133,49 @@ Deletes the index for the specified project, or all projects if `--all` is used.
 ## Workflow
 
 ```
-1. droidlens_get_stats()                         → Verify index exists and is fresh
-2. droidlens_search_nodes({query: "<concept>"})  → Find relevant classes / methods
-3. droidlens_get_node({id: <nodeId>})            → Inspect a specific node
-4. droidlens_get_neighbors({id: <nodeId>})       → Explore callers / callees / dependencies
-5. droidlens_get_call_chain({...})               → Trace a full call chain
+1. KNode_get_stats()                         → Verify index exists and is fresh
+2. KNode_search_nodes({query: "<concept>"})  → Find relevant classes / methods
+3. KNode_get_node({id: <nodeId>})            → Inspect a specific node
+4. KNode_get_neighbors({id: <nodeId>})       → Explore callers / callees / dependencies
+5. KNode_get_call_chain({...})               → Trace a full call chain
 ```
 
-> If `get_stats` shows 0 nodes → run `droidlens index <path>` in terminal first.
+> If `get_stats` shows 0 nodes → run `KNode index <path>` in terminal first.
 
 ## Checklist
 
 ```
-- [ ] droidlens_get_stats() to confirm index is loaded
-- [ ] droidlens_search_nodes for the concept you want to understand
+- [ ] KNode_get_stats() to confirm index is loaded
+- [ ] KNode_search_nodes for the concept you want to understand
 - [ ] Review returned classes / methods with file locations
-- [ ] droidlens_get_neighbors on key nodes for callers / dependencies
-- [ ] droidlens_get_call_chain for full execution traces
+- [ ] KNode_get_neighbors on key nodes for callers / dependencies
+- [ ] KNode_get_call_chain for full execution traces
 - [ ] Read source files for implementation details
 ```
 
 ## Tools
 
-**droidlens_search_nodes** — full-text search across all graph nodes:
+**KNode_search_nodes** — full-text search across all graph nodes:
 
 ```
-droidlens_search_nodes({query: "payment", limit: 10})
+KNode_search_nodes({query: "payment", limit: 10})
 → PaymentActivity  (app/src/main/java/.../PaymentActivity.kt:1)
 → PaymentViewModel (app/src/main/.../PaymentViewModel.kt:1)
 → processPayment   (PaymentRepository.kt:42)
 ```
 
-**droidlens_get_neighbors** — callers, callees, and relationships:
+**KNode_get_neighbors** — callers, callees, and relationships:
 
 ```
-droidlens_get_neighbors({id: 123, direction: "both"})
+KNode_get_neighbors({id: 123, direction: "both"})
 → Incoming: CheckoutActivity.onPay() → processPayment
 → Outgoing: processPayment → validateCard, chargeGateway
 ```
 
-**droidlens_get_call_chain** — trace a complete call chain:
+**KNode_get_call_chain** — trace a complete call chain:
 
 ```
-droidlens_get_call_chain({from_id: 10, to_id: 55})
+KNode_get_call_chain({from_id: 10, to_id: 55})
 → CheckoutActivity.onPay
   → PaymentViewModel.submit
     → PaymentRepository.processPayment
@@ -185,27 +185,27 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 ## Example: "How does the login flow work?"
 
 ```
-1. droidlens_search_nodes({query: "login"})
+1. KNode_search_nodes({query: "login"})
    → LoginActivity, LoginViewModel, AuthRepository
 
-2. droidlens_get_neighbors({id: <LoginActivity.id>})
+2. KNode_get_neighbors({id: <LoginActivity.id>})
    → Outgoing: LoginViewModel.login(), LoginViewModel.validateInput()
 
-3. droidlens_get_call_chain({from_id: <LoginActivity>, to_id: <AuthRepository>})
+3. KNode_get_call_chain({from_id: <LoginActivity>, to_id: <AuthRepository>})
    → LoginActivity → LoginViewModel.login → AuthRepository.authenticate → AuthApi.login
 ```
 """,
     },
 
-    "droidlens-impact-analysis": {
-        "name": "droidlens-impact-analysis",
+    "KNode-impact-analysis": {
+        "name": "KNode-impact-analysis",
         "description": (
             'Use when the user wants to know what will break if they change something in the Android codebase, '
             'or needs safety analysis before editing. '
             'Examples: "Is it safe to change X?", "What depends on this class?", "What will break?"'
         ),
         "content": """\
-# Impact Analysis with DroidLens
+# Impact Analysis with KNode
 
 ## When to Use
 
@@ -218,21 +218,21 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 ## Workflow
 
 ```
-1. droidlens_search_nodes({query: "X"})               → Find the target node(s)
-2. droidlens_get_neighbors({id, direction: "incoming"}) → Direct callers / dependents
-3. droidlens_get_call_chain({...})                     → Trace upstream paths
+1. KNode_search_nodes({query: "X"})               → Find the target node(s)
+2. KNode_get_neighbors({id, direction: "incoming"}) → Direct callers / dependents
+3. KNode_get_call_chain({...})                     → Trace upstream paths
 4. Assess risk level and report to user
 ```
 
-> Re-index first if stats show 0 nodes: `droidlens index <path>`
+> Re-index first if stats show 0 nodes: `KNode index <path>`
 
 ## Checklist
 
 ```
-- [ ] droidlens_search_nodes to locate the target symbol
-- [ ] droidlens_get_neighbors (incoming) to find direct callers
+- [ ] KNode_search_nodes to locate the target symbol
+- [ ] KNode_get_neighbors (incoming) to find direct callers
 - [ ] Review high-confidence dependencies first
-- [ ] droidlens_get_call_chain for upstream traces
+- [ ] KNode_get_call_chain for upstream traces
 - [ ] Assess risk level and report to user before editing
 ```
 
@@ -256,14 +256,14 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 ## Example: "What breaks if I change AuthRepository.authenticate?"
 
 ```
-1. droidlens_search_nodes({query: "AuthRepository.authenticate"})
+1. KNode_search_nodes({query: "AuthRepository.authenticate"})
    → node id: 42
 
-2. droidlens_get_neighbors({id: 42, direction: "incoming"})
+2. KNode_get_neighbors({id: 42, direction: "incoming"})
    → LoginViewModel.login (LoginViewModel.kt:35)
    → SsoViewModel.ssoLogin (SsoViewModel.kt:22)
 
-3. droidlens_get_call_chain({from_id: <LoginActivity>, to_id: 42})
+3. KNode_get_call_chain({from_id: <LoginActivity>, to_id: 42})
    → LoginActivity → LoginViewModel.login → AuthRepository.authenticate
 
 4. Risk: 2 direct callers, cross-module = MEDIUM
@@ -272,14 +272,14 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 """,
     },
 
-    "droidlens-debugging": {
-        "name": "droidlens-debugging",
+    "KNode-debugging": {
+        "name": "KNode-debugging",
         "description": (
             'Use when the user is debugging a bug, tracing an error, or asking why something fails in the Android app. '
             'Examples: "Why is X failing?", "Where does this crash come from?", "Trace this NullPointerException"'
         ),
         "content": """\
-# Debugging Android Code with DroidLens
+# Debugging Android Code with KNode
 
 ## When to Use
 
@@ -292,27 +292,27 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 ## Workflow
 
 ```
-1. droidlens_search_nodes({query: "<class or method near error>"}) → Find related nodes
-2. droidlens_get_node({id: <nodeId>})                              → Inspect the suspect
-3. droidlens_get_neighbors({id, direction: "incoming"})            → Who calls it?
-4. droidlens_get_call_chain({from_id, to_id})                      → Trace full call path
+1. KNode_search_nodes({query: "<class or method near error>"}) → Find related nodes
+2. KNode_get_node({id: <nodeId>})                              → Inspect the suspect
+3. KNode_get_neighbors({id, direction: "incoming"})            → Who calls it?
+4. KNode_get_call_chain({from_id, to_id})                      → Trace full call path
 ```
 
-> Re-index if `get_stats` shows 0 nodes: `droidlens index <path>`
+> Re-index if `get_stats` shows 0 nodes: `KNode index <path>`
 
 ## Checklist
 
 ```
 - [ ] Understand the symptom (crash message, wrong behavior)
-- [ ] droidlens_search_nodes for the class/method at the crash site
-- [ ] droidlens_get_neighbors to see callers
-- [ ] droidlens_get_call_chain to trace the full execution path
+- [ ] KNode_search_nodes for the class/method at the crash site
+- [ ] KNode_get_neighbors to see callers
+- [ ] KNode_get_call_chain to trace the full execution path
 - [ ] Read source files to confirm root cause
 ```
 
 ## Debugging Patterns
 
-| Symptom                  | DroidLens Approach                                              |
+| Symptom                  | KNode Approach                                              |
 | ------------------------ | --------------------------------------------------------------- |
 | NullPointerException     | `search_nodes` for the class → `get_neighbors` incoming callers |
 | Wrong ViewModel state    | `get_call_chain` from Activity → ViewModel → Repository         |
@@ -323,16 +323,16 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 ## Example: "LoginActivity crashes on launch"
 
 ```
-1. droidlens_search_nodes({query: "LoginActivity"})
+1. KNode_search_nodes({query: "LoginActivity"})
    → node id: 10
 
-2. droidlens_get_node({id: 10})
+2. KNode_get_node({id: 10})
    → file: app/src/main/java/.../LoginActivity.kt, line 1
 
-3. droidlens_get_neighbors({id: 10, direction: "outgoing"})
+3. KNode_get_neighbors({id: 10, direction: "outgoing"})
    → Calls: LoginViewModel.init, SessionManager.restore
 
-4. droidlens_get_neighbors({id: <SessionManager>, direction: "outgoing"})
+4. KNode_get_neighbors({id: <SessionManager>, direction: "outgoing"})
    → Calls: SharedPreferences.getString (may throw if key missing)
 
 5. Root cause: SessionManager.restore reads a key that doesn't exist on first launch
@@ -340,14 +340,14 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 """,
     },
 
-    "droidlens-refactoring": {
-        "name": "droidlens-refactoring",
+    "KNode-refactoring": {
+        "name": "KNode-refactoring",
         "description": (
             'Use when the user wants to rename, move, extract, or restructure Android code safely. '
             'Examples: "Rename this class", "Extract this into a use-case", "Move this to a new module"'
         ),
         "content": """\
-# Refactoring Android Code with DroidLens
+# Refactoring Android Code with KNode
 
 ## When to Use
 
@@ -360,11 +360,11 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 ## Workflow
 
 ```
-1. droidlens_search_nodes({query: "X"})                → Locate target node
-2. droidlens_get_neighbors({id, direction: "incoming"}) → Map all callers (d=1)
-3. droidlens_get_call_chain({...})                      → Trace upstream paths
+1. KNode_search_nodes({query: "X"})                → Locate target node
+2. KNode_get_neighbors({id, direction: "incoming"}) → Map all callers (d=1)
+3. KNode_get_call_chain({...})                      → Trace upstream paths
 4. Plan update order: interfaces → implementations → callers → tests
-5. Make changes, then re-run `droidlens index` to verify the new graph
+5. Make changes, then re-run `KNode index` to verify the new graph
 ```
 
 > Re-index after refactoring to confirm the new graph is consistent.
@@ -374,32 +374,32 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 ### Rename Class or Method
 
 ```
-- [ ] droidlens_search_nodes to find the target
-- [ ] droidlens_get_neighbors (incoming) to find all call sites
+- [ ] KNode_search_nodes to find the target
+- [ ] KNode_get_neighbors (incoming) to find all call sites
 - [ ] Perform rename in IDE (use IDE's "Rename" refactor for safety)
-- [ ] Re-run droidlens index <path>
-- [ ] droidlens_get_stats() to confirm graph rebuilt cleanly
-- [ ] droidlens_search_nodes for the new name to verify all references
+- [ ] Re-run KNode index <path>
+- [ ] KNode_get_stats() to confirm graph rebuilt cleanly
+- [ ] KNode_search_nodes for the new name to verify all references
 ```
 
 ### Extract UseCase / Repository
 
 ```
-- [ ] droidlens_get_neighbors on the source class — see all callers
+- [ ] KNode_get_neighbors on the source class — see all callers
 - [ ] Identify methods to extract
 - [ ] Create new UseCase / Repository class
 - [ ] Update callers one by one
-- [ ] Re-run droidlens index and verify with droidlens_search_nodes
+- [ ] Re-run KNode index and verify with KNode_search_nodes
 ```
 
 ### Move to New Module
 
 ```
-- [ ] droidlens_search_nodes for all classes in the feature
-- [ ] droidlens_get_neighbors to find cross-module dependencies
+- [ ] KNode_search_nodes for all classes in the feature
+- [ ] KNode_get_neighbors to find cross-module dependencies
 - [ ] Resolve dependency direction (module A must not import module B if B imports A)
 - [ ] Move files, update imports
-- [ ] Re-run droidlens index and check get_stats for errors
+- [ ] Re-run KNode index and check get_stats for errors
 ```
 
 ## Risk Rules
@@ -414,86 +414,86 @@ droidlens_get_call_chain({from_id: 10, to_id: 55})
 ## Example: Rename `AuthRepository` to `AuthDataSource`
 
 ```
-1. droidlens_search_nodes({query: "AuthRepository"})
+1. KNode_search_nodes({query: "AuthRepository"})
    → node id: 77  (AuthRepository.kt:1)
 
-2. droidlens_get_neighbors({id: 77, direction: "incoming"})
+2. KNode_get_neighbors({id: 77, direction: "incoming"})
    → LoginViewModel.kt:12
    → SsoViewModel.kt:8
    → UserProfileViewModel.kt:31
 
 3. Use Android Studio "Rename" refactor → updates all 3 callers
 
-4. droidlens index .
+4. KNode index .
 
-5. droidlens_search_nodes({query: "AuthDataSource"})
+5. KNode_search_nodes({query: "AuthDataSource"})
    → Confirms new name is indexed with correct edges
 ```
 """,
     },
 
-    "droidlens-guide": {
-        "name": "droidlens-guide",
+    "KNode-guide": {
+        "name": "KNode-guide",
         "description": (
-            'Use when the user asks about DroidLens itself — available MCP tools, how to query the graph, '
+            'Use when the user asks about KNode itself — available MCP tools, how to query the graph, '
             'or general workflow reference. '
-            'Examples: "What DroidLens tools are available?", "How do I use DroidLens?"'
+            'Examples: "What KNode tools are available?", "How do I use KNode?"'
         ),
         "content": """\
-# DroidLens Guide
+# KNode Guide
 
-Quick reference for all DroidLens MCP tools and the recommended workflow for AI agents.
+Quick reference for all KNode MCP tools and the recommended workflow for AI agents.
 
 ## Always Start Here
 
 For any task involving Android code understanding, debugging, impact analysis, or refactoring:
 
-1. **`droidlens_get_stats()`** — verify the index exists and is fresh
+1. **`KNode_get_stats()`** — verify the index exists and is fresh
 2. **Match your task to a skill below** and read that skill file
 3. **Follow the skill's workflow and checklist**
 
-> If `get_stats` shows 0 nodes → run `droidlens index <path>` in the terminal first.
+> If `get_stats` shows 0 nodes → run `KNode index <path>` in the terminal first.
 
 ## Skills
 
 | Task                                              | Skill to read                  |
 | ------------------------------------------------- | ------------------------------ |
-| Understand architecture / "How does X work?"      | `droidlens-exploring`          |
-| Blast radius / "What breaks if I change X?"       | `droidlens-impact-analysis`    |
-| Trace bugs / "Why is X failing?"                  | `droidlens-debugging`          |
-| Rename / extract / split / move code              | `droidlens-refactoring`        |
-| Tools & workflow reference                        | `droidlens-guide` (this file)  |
-| Index, serve, mcp, stats CLI commands             | `droidlens-cli`                |
+| Understand architecture / "How does X work?"      | `KNode-exploring`          |
+| Blast radius / "What breaks if I change X?"       | `KNode-impact-analysis`    |
+| Trace bugs / "Why is X failing?"                  | `KNode-debugging`          |
+| Rename / extract / split / move code              | `KNode-refactoring`        |
+| Tools & workflow reference                        | `KNode-guide` (this file)  |
+| Index, serve, mcp, stats CLI commands             | `KNode-cli`                |
 
 ## MCP Tools Reference
 
 | Tool                      | What it gives you                                             |
 | ------------------------- | ------------------------------------------------------------- |
-| `droidlens_get_stats`     | Node/edge counts, index freshness check                       |
-| `droidlens_search_nodes`  | Full-text search across all classes, methods, files           |
-| `droidlens_get_node`      | Detailed info for a single node (type, file, line, doc)       |
-| `droidlens_get_neighbors` | Callers, callees, and relationships for a node                |
-| `droidlens_get_call_chain`| Full call chain trace between two nodes                       |
-| `droidlens_list_classes`  | List all indexed classes with optional type filter            |
-| `droidlens_impact`        | Blast radius analysis (BFS on incoming edges)                 |
-| `droidlens_sql_query`     | Run raw SQLite queries against the graph database             |
+| `KNode_get_stats`     | Node/edge counts, index freshness check                       |
+| `KNode_search_nodes`  | Full-text search across all classes, methods, files           |
+| `KNode_get_node`      | Detailed info for a single node (type, file, line, doc)       |
+| `KNode_get_neighbors` | Callers, callees, and relationships for a node                |
+| `KNode_get_call_chain`| Full call chain trace between two nodes                       |
+| `KNode_list_classes`  | List all indexed classes with optional type filter            |
+| `KNode_impact`        | Blast radius analysis (BFS on incoming edges)                 |
+| `KNode_sql_query`     | Run raw SQLite queries against the graph database             |
 
 ## Typical Exploration Flow
 
 ```
-droidlens_get_stats()
+KNode_get_stats()
   → 1 234 nodes, 5 678 edges — index is fresh
 
-droidlens_search_nodes({query: "checkout"})
+KNode_search_nodes({query: "checkout"})
   → CheckoutActivity (id: 10)
   → CheckoutViewModel (id: 11)
   → CheckoutRepository (id: 12)
 
-droidlens_get_neighbors({id: 10, direction: "outgoing"})
+KNode_get_neighbors({id: 10, direction: "outgoing"})
   → CheckoutActivity → CheckoutViewModel.startCheckout()
   → CheckoutActivity → AnalyticsTracker.logEvent()
 
-droidlens_get_call_chain({from_id: 10, to_id: 12})
+KNode_get_call_chain({from_id: 10, to_id: 12})
   → CheckoutActivity → CheckoutViewModel.startCheckout
     → CheckoutRepository.placeOrder → PaymentApi.charge
 ```
@@ -526,59 +526,59 @@ droidlens_get_call_chain({from_id: 10, to_id: 12})
 # ---------------------------------------------------------------------------
 
 AGENTS_MD_BLOCK_TEMPLATE = """\
-<!-- droidlens:start -->
-# DroidLens — Android Code Intelligence
+<!-- KNode:start -->
+# KNode — Android Code Intelligence
 
-This project is indexed by DroidLens. Use the DroidLens MCP tools to explore the Android codebase,
+This project is indexed by KNode. Use the KNode MCP tools to explore the Android codebase,
 trace call chains, assess impact, and navigate safely.
 
-> If any DroidLens tool reports 0 nodes, run `droidlens index <path>` in terminal first.
+> If any KNode tool reports 0 nodes, run `KNode index <path>` in terminal first.
 
 ## Always Do
 
 - **MUST run impact analysis before editing any class or method.** Before modifying, call
-  `droidlens_get_neighbors({{id, direction: "incoming"}})` and check the blast radius (direct callers,
+  `KNode_get_neighbors({{id, direction: "incoming"}})` and check the blast radius (direct callers,
   risk level) before proceeding.
 - **MUST warn the user** if the incoming caller count is HIGH (>9) or CRITICAL (auth/payment path)
   before making edits.
-- When exploring unfamiliar code, use `droidlens_search_nodes({{query: "concept"}})` to find relevant
+- When exploring unfamiliar code, use `KNode_search_nodes({{query: "concept"}})` to find relevant
   classes/methods instead of grepping. It searches the full knowledge graph.
 - When you need full context on a specific node — callers, callees — use
-  `droidlens_get_neighbors({{id, direction: "both"}})`.
+  `KNode_get_neighbors({{id, direction: "both"}})`.
 
 ## Never Do
 
-- NEVER edit a class or method without first checking incoming callers with `droidlens_get_neighbors`.
+- NEVER edit a class or method without first checking incoming callers with `KNode_get_neighbors`.
 - NEVER ignore HIGH or CRITICAL caller-count warnings.
 - NEVER rename symbols with find-and-replace — use the IDE's safe rename refactor after mapping
-  callers with DroidLens.
-- NEVER assume the graph is fresh — call `droidlens_get_stats()` at the start of every session.
+  callers with KNode.
+- NEVER assume the graph is fresh — call `KNode_get_stats()` at the start of every session.
 
 ## MCP Tools
 
 | Tool                      | Use for                                              |
 | ------------------------- | ---------------------------------------------------- |
-| `droidlens_get_stats`     | Verify index freshness, node/edge counts             |
-| `droidlens_search_nodes`  | Find classes/methods by name or concept              |
-| `droidlens_get_node`      | Inspect a single node (file, line, type, doc)        |
-| `droidlens_get_neighbors` | Callers, callees, and relationships for a node       |
-| `droidlens_get_call_chain`| Trace a full call chain between two nodes            |
-| `droidlens_list_classes`  | List all indexed classes                             |
-| `droidlens_impact`        | Blast radius analysis (BFS on incoming edges)        |
-| `droidlens_sql_query`     | Run raw SQLite queries against the graph database    |
+| `KNode_get_stats`     | Verify index freshness, node/edge counts             |
+| `KNode_search_nodes`  | Find classes/methods by name or concept              |
+| `KNode_get_node`      | Inspect a single node (file, line, type, doc)        |
+| `KNode_get_neighbors` | Callers, callees, and relationships for a node       |
+| `KNode_get_call_chain`| Trace a full call chain between two nodes            |
+| `KNode_list_classes`  | List all indexed classes                             |
+| `KNode_impact`        | Blast radius analysis (BFS on incoming edges)        |
+| `KNode_sql_query`     | Run raw SQLite queries against the graph database    |
 
 ## CLI
 
 | Task                                              | Read this skill file                                   |
 | ------------------------------------------------- | ------------------------------------------------------ |
-| Understand architecture / "How does X work?"      | `.agents/skills/droidlens/droidlens-exploring/SKILL.md`     |
-| Blast radius / "What breaks if I change X?"       | `.agents/skills/droidlens/droidlens-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?"                  | `.agents/skills/droidlens/droidlens-debugging/SKILL.md`     |
-| Rename / extract / split / move code              | `.agents/skills/droidlens/droidlens-refactoring/SKILL.md`   |
-| Tools & workflow reference                        | `.agents/skills/droidlens/droidlens-guide/SKILL.md`         |
-| Index, serve, mcp, stats CLI commands             | `.agents/skills/droidlens/droidlens-cli/SKILL.md`           |
+| Understand architecture / "How does X work?"      | `.agents/skills/KNode/KNode-exploring/SKILL.md`     |
+| Blast radius / "What breaks if I change X?"       | `.agents/skills/KNode/KNode-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?"                  | `.agents/skills/KNode/KNode-debugging/SKILL.md`     |
+| Rename / extract / split / move code              | `.agents/skills/KNode/KNode-refactoring/SKILL.md`   |
+| Tools & workflow reference                        | `.agents/skills/KNode/KNode-guide/SKILL.md`         |
+| Index, serve, mcp, stats CLI commands             | `.agents/skills/KNode/KNode-cli/SKILL.md`           |
 
-<!-- droidlens:end -->
+<!-- KNode:end -->
 """
 
 
@@ -587,7 +587,7 @@ trace call chains, assess impact, and navigate safely.
 # ---------------------------------------------------------------------------
 
 def scaffold_project(project_path: str, project_name: str | None = None) -> None:
-    """Create / update .agents/skills/droidlens/ and AGENTS.md in *project_path*."""
+    """Create / update .agents/skills/KNode/ and AGENTS.md in *project_path*."""
     root = Path(project_path).resolve()
     _scaffold_skills(root)
     _scaffold_agents_md(root, project_name or root.name)
@@ -598,8 +598,8 @@ def scaffold_project(project_path: str, project_name: str | None = None) -> None
 # ---------------------------------------------------------------------------
 
 def _scaffold_skills(root: Path) -> None:
-    """Write SKILL.md files into .agents/skills/droidlens/<skill-name>/."""
-    skills_root = root / ".agents" / "skills" / "droidlens"
+    """Write SKILL.md files into .agents/skills/KNode/<skill-name>/."""
+    skills_root = root / ".agents" / "skills" / "KNode"
     skills_root.mkdir(parents=True, exist_ok=True)
 
     for skill_key, skill in SKILLS.items():
@@ -617,7 +617,7 @@ def _scaffold_skills(root: Path) -> None:
 
 
 def _scaffold_agents_md(root: Path, project_name: str) -> None:
-    """Create AGENTS.md if absent, or append the droidlens block if not already present."""
+    """Create AGENTS.md if absent, or append the KNode block if not already present."""
     agents_md = root / "AGENTS.md"
     block = AGENTS_MD_BLOCK_TEMPLATE
 
@@ -628,8 +628,8 @@ def _scaffold_agents_md(root: Path, project_name: str) -> None:
     existing = agents_md.read_text(encoding="utf-8")
 
     # If the block is already injected, update it in-place
-    start_tag = "<!-- droidlens:start -->"
-    end_tag = "<!-- droidlens:end -->"
+    start_tag = "<!-- KNode:start -->"
+    end_tag = "<!-- KNode:end -->"
 
     if start_tag in existing and end_tag in existing:
         # Replace the existing block

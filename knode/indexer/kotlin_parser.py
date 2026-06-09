@@ -12,7 +12,7 @@ import hashlib
 import tree_sitter_kotlin as tskotlin
 from tree_sitter import Language, Parser, Node as TSNode
 
-from droidlens.graph.models import Node, Edge, NodeType, EdgeType
+from knode.graph.models import Node, Edge, NodeType, EdgeType
 
 KOTLIN_LANGUAGE = Language(tskotlin.language())
 _parser = Parser(KOTLIN_LANGUAGE)

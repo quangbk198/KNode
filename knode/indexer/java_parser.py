@@ -10,7 +10,7 @@ import hashlib
 import tree_sitter_java as tsjava
 from tree_sitter import Language, Parser, Node as TSNode
 
-from droidlens.graph.models import Node, Edge, NodeType, EdgeType
+from knode.graph.models import Node, Edge, NodeType, EdgeType
 
 JAVA_LANGUAGE = Language(tsjava.language())
 _parser = Parser(JAVA_LANGUAGE)
