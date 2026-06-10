@@ -125,6 +125,7 @@ async def list_tools() -> list[types.Tool]:
                 "type": "object",
                 "properties": {
                     "project_path": {"type": "string", "description": "Absolute path to the Android project root."},
+                    "full_reindex": {"type": "boolean", "description": "Force a full re-index instead of incremental (default: false)."},
                 },
                 "required": ["project_path"],
             },
@@ -358,6 +359,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
         # ── index_project ──────────────────────────────────────────────────────
         elif name == "index_project":
             project_path = arguments.get("project_path", "")
+            full_reindex = bool(arguments.get("full_reindex", False))
             if not Path(project_path).exists():
                 return text({"error": f"Path '{project_path}' does not exist."})
             from knode.indexer.graph_builder import build_graph
@@ -366,12 +368,13 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
             pname = Path(project_path).name
             if pname in _projects:
                 _projects[pname].close()
-            new_storage = build_graph(project_path)
+            new_storage = build_graph(project_path, incremental=not full_reindex)
             register(project_path, get_db_path(project_path))
             _projects[pname] = new_storage
             _active_project = pname
             stats = new_storage.get_stats()
-            return text({"status": "ok", "project": pname, "project_path": project_path, **stats})
+            mode = "full" if full_reindex else "incremental"
+            return text({"status": "ok", "project": pname, "project_path": project_path, "mode": mode, **stats})
 
         # ── get_node ───────────────────────────────────────────────────────────
         elif name == "get_node":

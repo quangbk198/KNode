@@ -300,54 +300,121 @@ def _resolve_cross_file_types(storage: GraphStorage):
 def build_graph(
     project_path: str,
     on_progress: Optional[Callable[[int, int, str], None]] = None,
+    incremental: bool = True,
+    quiet: bool = False,
 ) -> GraphStorage:
     """
     Index an Android project and return an open GraphStorage.
     Caller is responsible for closing the storage.
     """
+    project_path = str(Path(project_path).resolve().absolute())
     db_path = get_db_path(project_path)
     storage = GraphStorage(db_path)
     storage.connect()
-    storage.clear()
 
-    files = list(scan_sources(project_path))
-    total = len(files)
+    if not incremental:
+        storage.clear()
+        storage.clear_indexed_files()
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[bold cyan]{task.description}"),
-        BarColumn(),
-        TaskProgressColumn(),
-        console=console,
-    ) as progress:
-        task = progress.add_task(f"Indexing {total} files…", total=total)
+    # Get current files on disk
+    current_files = list(scan_sources(project_path))
+    
+    # Map them by normalized absolute path string
+    current_map = {str(Path(file_path).resolve().absolute()): (file_path, lang) for file_path, lang in current_files}
+    
+    # Get previously indexed files
+    indexed = storage.get_indexed_files()  # {file_path: (mtime, language)}
+    indexed_map = {str(Path(k).resolve().absolute()): (k, v) for k, v in indexed.items()}
 
-        for i, (file_path, lang) in enumerate(files):
-            progress.update(task, description=f"[cyan]{file_path.name}", advance=1)
-            if on_progress:
-                on_progress(i + 1, total, str(file_path))
+    # Determine files to delete
+    deleted_paths = []
+    for abs_path_str, (orig_db_path, _) in indexed_map.items():
+        if abs_path_str not in current_map:
+            deleted_paths.append(orig_db_path)
 
-            try:
-                if lang == "java":
-                    nodes, edges = parse_java_file(str(file_path))
-                else:
-                    nodes, edges = parse_kotlin_file(str(file_path))
+    # Determine files to parse
+    to_parse = []
+    for abs_path_str, (file_path, lang) in current_map.items():
+        try:
+            mtime = Path(file_path).stat().st_mtime
+        except Exception:
+            mtime = 0.0
 
-                for node in nodes:
-                    storage.upsert_node(node)
-                for edge in edges:
-                    storage.upsert_edge(edge)
+        if abs_path_str not in indexed_map:
+            to_parse.append((file_path, lang, mtime))
+        else:
+            orig_db_path, (db_mtime, db_lang) = indexed_map[abs_path_str]
+            if abs(mtime - db_mtime) > 1e-4:
+                to_parse.append((file_path, lang, mtime))
 
-            except Exception as exc:  # noqa: BLE001
-                console.print(f"[yellow]⚠ Skipped {file_path.name}: {exc}")
+    # Remove data for deleted files
+    for orig_db_path in deleted_paths:
+        storage.remove_file_data(orig_db_path)
+
+    total = len(to_parse)
+
+    if total > 0:
+        if quiet:
+            for i, (file_path, lang, mtime) in enumerate(to_parse):
+                if on_progress:
+                    on_progress(i + 1, total, str(file_path))
+                try:
+                    file_path_str = str(file_path)
+                    storage.remove_file_data(file_path_str)
+                    
+                    if lang == "java":
+                        nodes, edges = parse_java_file(file_path_str)
+                    else:
+                        nodes, edges = parse_kotlin_file(file_path_str)
+
+                    for node in nodes:
+                        storage.upsert_node(node)
+                    for edge in edges:
+                        storage.upsert_edge(edge)
+                    storage.record_file(file_path_str, mtime, lang)
+                except Exception:
+                    pass
+        else:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[bold cyan]{task.description}"),
+                BarColumn(),
+                TaskProgressColumn(),
+                console=console,
+            ) as progress:
+                task = progress.add_task(f"Indexing {total} files…", total=total)
+
+                for i, (file_path, lang, mtime) in enumerate(to_parse):
+                    progress.update(task, description=f"[cyan]{file_path.name}", advance=1)
+                    if on_progress:
+                        on_progress(i + 1, total, str(file_path))
+
+                    try:
+                        file_path_str = str(file_path)
+                        storage.remove_file_data(file_path_str)
+                        
+                        if lang == "java":
+                            nodes, edges = parse_java_file(file_path_str)
+                        else:
+                            nodes, edges = parse_kotlin_file(file_path_str)
+
+                        for node in nodes:
+                            storage.upsert_node(node)
+                        for edge in edges:
+                            storage.upsert_edge(edge)
+                        
+                        storage.record_file(file_path_str, mtime, lang)
+
+                    except Exception as exc:  # noqa: BLE001
+                        console.print(f"[yellow]⚠ Skipped {file_path.name}: {exc}")
 
         storage.commit()
 
-    # Perform cross-file call, type, and property-reads resolution
-    _resolve_cross_file_calls(storage)
-    _resolve_cross_file_types(storage)
-    _resolve_cross_file_reads(storage)
-
+    # Re-run resolution if any files were changed/added/deleted, or if it's a full run
+    if total > 0 or len(deleted_paths) > 0 or not incremental:
+        _resolve_cross_file_calls(storage)
+        _resolve_cross_file_types(storage)
+        _resolve_cross_file_reads(storage)
 
     stats = storage.get_stats()
     storage.set_project_info("path", project_path)
@@ -355,7 +422,6 @@ def build_graph(
     storage.set_project_info("indexed_at", datetime.now(timezone.utc).isoformat())
     storage.set_project_info("stats", stats)
 
-    # Automatically add .knode/ to .gitignore
     _update_gitignore(project_path)
 
     return storage

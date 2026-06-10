@@ -31,57 +31,66 @@ def cli():
 
 @cli.command()
 @click.argument("project_path", default=".", type=click.Path(exists=True))
-def index(project_path: str):
+@click.option("--full", is_flag=True, help="Force full re-index.")
+@click.option("--quiet", is_flag=True, help="Suppress output.")
+def index(project_path: str, full: bool, quiet: bool):
     """Index an Android project at PROJECT_PATH."""
     import os
     project_path = os.path.abspath(project_path)
 
-    console.print(Panel.fit(
-        f"[bold cyan]knode[/bold cyan]  v{__version__}\n"
-        f"[dim]Indexing:[/dim] [white]{project_path}[/white]",
-        border_style="cyan",
-    ))
+    if not quiet:
+        console.print(Panel.fit(
+            f"[bold cyan]knode[/bold cyan]  v{__version__}\n"
+            f"[dim]Indexing:[/dim] [white]{project_path}[/white]",
+            border_style="cyan",
+        ))
 
     from knode.indexer.graph_builder import build_graph
     from knode.graph.storage import get_db_path
-    storage = build_graph(project_path)
+    storage = build_graph(project_path, incremental=not full, quiet=quiet)
     stats = storage.get_stats()
     storage.close()
 
-    table = Table(title="Index complete", border_style="cyan", show_header=True)
-    table.add_column("Metric", style="bold")
-    table.add_column("Value", justify="right", style="green")
-    table.add_row("Total nodes", str(stats["node_count"]))
-    table.add_row("Total edges", str(stats["edge_count"]))
-    for k, v in stats.get("nodes_by_type", {}).items():
-        table.add_row(f"  {k}", str(v))
+    if not quiet:
+        table = Table(title="Index complete", border_style="cyan", show_header=True)
+        table.add_column("Metric", style="bold")
+        table.add_column("Value", justify="right", style="green")
+        table.add_row("Total nodes", str(stats["node_count"]))
+        table.add_row("Total edges", str(stats["edge_count"]))
+        for k, v in stats.get("nodes_by_type", {}).items():
+            table.add_row(f"  {k}", str(v))
 
-    console.print(table)
+        console.print(table)
 
     # ── Register in global registry ───────────────────────────────────────────
     try:
         from knode.registry import register
         project_name = register(project_path, get_db_path(project_path))
-        console.print(
-            f"[bold green]✓[/bold green] Registered [cyan]{project_name}[/cyan] "
-            "in global registry [dim](~/.knode/registry.json)[/dim]"
-        )
+        if not quiet:
+            console.print(
+                f"[bold green]OK[/bold green] Registered [cyan]{project_name}[/cyan] "
+                "in global registry [dim](~/.knode/registry.json)[/dim]"
+            )
     except Exception as exc:  # noqa: BLE001
-        console.print(f"[yellow]⚠ Could not register project: {exc}[/yellow]")
+        if not quiet:
+            console.print(f"[yellow]WARNING Could not register project: {exc}[/yellow]")
 
     # ── Scaffold .agents/skills/knode/ and AGENTS.md ─────────────────────
     try:
         from knode.scaffold import scaffold_project
         scaffold_project(project_path)
-        console.print(
-            "[bold green]✓[/bold green] Scaffolded "
-            "[cyan].agents/skills/knode/[/cyan] and updated "
-            "[cyan]AGENTS.md[/cyan]"
-        )
+        if not quiet:
+            console.print(
+                "[bold green]OK[/bold green] Scaffolded "
+                "[cyan].agents/skills/knode/[/cyan] and updated "
+                "[cyan]AGENTS.md[/cyan]"
+            )
     except Exception as exc:  # noqa: BLE001
-        console.print(f"[yellow]⚠ Could not scaffold agent files: {exc}[/yellow]")
+        if not quiet:
+            console.print(f"[yellow]WARNING Could not scaffold agent files: {exc}[/yellow]")
 
-    console.print(f"\n[bold green]Done![/bold green] Run [cyan]knode serve --project \"{project_path}\"[/cyan] to explore.")
+    if not quiet:
+        console.print(f"\n[bold green]Done![/bold green] Run [cyan]knode serve --project \"{project_path}\"[/cyan] to explore.")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -243,7 +252,7 @@ def clean(all_projects: bool, force: bool, project_path: str):
             except Exception:
                 pass
 
-        console.print("[bold green]✓ Deleted all indexes and cleared registry.[/bold green]")
+        console.print("[bold green]OK[/bold green] Deleted all indexes and cleared registry.")
     else:
         project_path = os.path.abspath(project_path)
         from knode.graph.storage import get_db_path
@@ -265,4 +274,57 @@ def clean(all_projects: bool, force: bool, project_path: str):
             return
 
         unregister(project_path)
-        console.print(f"[bold green]✓ Deleted index for {project_path}.[/bold green]")
+        console.print(f"[bold green]OK[/bold green] Deleted index for {project_path}.")
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# hooks
+# ──────────────────────────────────────────────────────────────────────────────
+
+@cli.group()
+def hooks():
+    """Manage Git hooks for auto re-indexing."""
+    pass
+
+@hooks.command(name="install")
+@click.argument("project_path", default=".", type=click.Path(exists=True))
+def hooks_install(project_path: str):
+    """Install git hooks to auto re-index after commit/checkout/merge."""
+    import os
+    from knode.hooks import install_hooks
+    project_path = os.path.abspath(project_path)
+    try:
+        install_hooks(project_path)
+        console.print("[bold green]OK[/bold green] Git hooks installed successfully.")
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] {e}")
+        raise click.Abort()
+
+@hooks.command(name="uninstall")
+@click.argument("project_path", default=".", type=click.Path(exists=True))
+def hooks_uninstall(project_path: str):
+    """Uninstall git hooks."""
+    import os
+    from knode.hooks import uninstall_hooks
+    project_path = os.path.abspath(project_path)
+    try:
+        uninstall_hooks(project_path)
+        console.print("[bold green]OK[/bold green] Git hooks uninstalled successfully.")
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] {e}")
+        raise click.Abort()
+
+@hooks.command(name="status")
+@click.argument("project_path", default=".", type=click.Path(exists=True))
+def hooks_status(project_path: str):
+    """Check the status of git hooks."""
+    import os
+    from knode.hooks import get_hooks_status
+    project_path = os.path.abspath(project_path)
+    try:
+        status_dict = get_hooks_status(project_path)
+        status_str = ", ".join(f"{k}: {v}" for k, v in status_dict.items())
+        console.print(f"Git hooks status for [cyan]{project_path}[/cyan]: [bold]{status_str}[/bold]")
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] {e}")
+        raise click.Abort()

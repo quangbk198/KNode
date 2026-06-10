@@ -72,12 +72,19 @@ class GraphStorage:
                 value TEXT
             );
 
+            CREATE TABLE IF NOT EXISTS indexed_files (
+                file_path  TEXT PRIMARY KEY,
+                mtime      REAL NOT NULL,
+                language   TEXT NOT NULL
+            );
+
             CREATE INDEX IF NOT EXISTS idx_nodes_type ON nodes(type);
             CREATE INDEX IF NOT EXISTS idx_nodes_name ON nodes(name);
             CREATE INDEX IF NOT EXISTS idx_nodes_package ON nodes(package_name);
             CREATE INDEX IF NOT EXISTS idx_edges_source ON edges(source_id);
             CREATE INDEX IF NOT EXISTS idx_edges_target ON edges(target_id);
             CREATE INDEX IF NOT EXISTS idx_edges_type ON edges(type);
+            CREATE INDEX IF NOT EXISTS idx_nodes_file ON nodes(file_path);
         """)
         self._conn.commit()
 
@@ -120,7 +127,63 @@ class GraphStorage:
         self._conn.commit()
 
     def clear(self):
-        self._conn.executescript("DELETE FROM nodes; DELETE FROM edges; DELETE FROM project_info;")
+        self._conn.executescript(
+            "DELETE FROM nodes; DELETE FROM edges; "
+            "DELETE FROM project_info; DELETE FROM indexed_files;"
+        )
+        self._conn.commit()
+
+    # ------------------------------------------------------------------
+    # Incremental indexing helpers — indexed_files table
+    # ------------------------------------------------------------------
+    def record_file(self, file_path: str, mtime: float, language: str):
+        """Record that a file has been indexed at the given mtime."""
+        self._conn.execute(
+            """
+            INSERT INTO indexed_files (file_path, mtime, language)
+            VALUES (?, ?, ?)
+            ON CONFLICT(file_path) DO UPDATE SET mtime=excluded.mtime, language=excluded.language
+            """,
+            (file_path, mtime, language),
+        )
+
+    def get_indexed_files(self) -> Dict[str, tuple]:
+        """Return {file_path: (mtime, language)} for all tracked files."""
+        rows = self._conn.execute(
+            "SELECT file_path, mtime, language FROM indexed_files"
+        ).fetchall()
+        return {r["file_path"]: (r["mtime"], r["language"]) for r in rows}
+
+    def remove_file_data(self, file_path: str):
+        """Delete all nodes and edges belonging to the given file_path.
+
+        Edges are removed if *either* endpoint belongs to the file (to avoid
+        dangling foreign-key references in the incremental graph).
+        """
+        node_ids = [
+            r[0]
+            for r in self._conn.execute(
+                "SELECT id FROM nodes WHERE file_path=?", (file_path,)
+            ).fetchall()
+        ]
+        if node_ids:
+            placeholders = ",".join("?" * len(node_ids))
+            self._conn.execute(
+                f"DELETE FROM edges WHERE source_id IN ({placeholders}) "
+                f"OR target_id IN ({placeholders})",
+                node_ids + node_ids,
+            )
+            self._conn.execute(
+                f"DELETE FROM nodes WHERE id IN ({placeholders})",
+                node_ids,
+            )
+        self._conn.execute(
+            "DELETE FROM indexed_files WHERE file_path=?", (file_path,)
+        )
+
+    def clear_indexed_files(self):
+        """Remove all indexed_files records (used before a full re-index)."""
+        self._conn.execute("DELETE FROM indexed_files")
         self._conn.commit()
 
     def set_project_info(self, key: str, value: Any):
