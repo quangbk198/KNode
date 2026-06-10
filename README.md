@@ -72,11 +72,27 @@ python -m knode index .
 ```
 
 > [!TIP]
+> **Incremental Indexing**: By default, `knode index` is incremental. It tracks file modification times (`mtime`) and only re-parses files that have changed, updated, or been added/deleted. This makes subsequent updates take only a fraction of a second. To force a full re-index, add the `--full` flag: `python -m knode index . --full`.
+
+> [!TIP]
 > After running `pip install -e .`, you can also use the shorter `knode` command directly if your Python Scripts folder is in your system `PATH`.
 
 This command parses your code, builds the SQLite graph, registers the project in the global registry (`~/.knode/registry.json`), and scaffolds agent-specific files (`AGENTS.md`).
 
-### 3. Explore Visually
+### 3. Setup Automatic Re-indexing (Git Hooks)
+
+Keep your index perfectly synchronized with your git history by installing lightweight git hooks:
+
+```bash
+python -m knode hooks install .
+```
+
+This configures `post-commit`, `post-checkout`, and `post-merge` hooks in your project's `.git/hooks/`. The hooks trigger fast incremental indexing in the background every time you commit, switch branches, or pull/merge code, entirely transparently without blocking your Git commands.
+
+- Check status: `python -m knode hooks status .`
+- Uninstall hooks: `python -m knode hooks uninstall .`
+
+### 4. Explore Visually
 
 ```bash
 python -m knode serve
@@ -128,7 +144,11 @@ claude mcp add knode -- python -m knode mcp
 
 | Command | Description |
 |---|---|
-| `python -m knode index [path]` | Index an Android project (or update stale index) |
+| `python -m knode index [path]` | Index an Android project (incremental by default) |
+| `python -m knode index [path] --full` | Force a full re-index of the project |
+| `python -m knode hooks install [path]` | Install Git hooks for automatic background re-indexing |
+| `python -m knode hooks uninstall [path]` | Uninstall Git hooks |
+| `python -m knode hooks status [path]` | Show status of installed Git hooks |
 | `python -m knode serve [path]` | Launch the interactive graph browser UI |
 | `python -m knode mcp` | Start MCP stdio server (serves all indexed repos) |
 | `python -m knode stats [path]` | Print graph statistics (nodes, edges, types) |
