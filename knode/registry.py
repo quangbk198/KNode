@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-KNode Global Registry
+knode Global Registry
 
 Maintains ~/.knode/registry.json — a map of
   project_name -> { "path": "<abs_path>", "db": "<abs_db_path>", "indexed_at": "..." }

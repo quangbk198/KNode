@@ -1,5 +1,5 @@
 """
-KNode MCP Server — exposes the knowledge graph as MCP tools
+knode MCP Server — exposes the knowledge graph as MCP tools
 so AI agents can query any indexed Android project.
 
 Run via:  knode mcp
@@ -131,7 +131,7 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="list_projects",
-            description="List all indexed Android projects registered with KNode.",
+            description="List all indexed Android projects registered with knode.",
             inputSchema={"type": "object", "properties": {}, "required": []},
         ),
         types.Tool(

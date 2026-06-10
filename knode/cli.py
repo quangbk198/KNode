@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-KNode CLI
+knode CLI
 
 Commands:
   knode index <path>              Index an Android project
@@ -20,9 +20,9 @@ console = Console()
 
 
 @click.group()
-@click.version_option(__version__, prog_name="KNode")
+@click.version_option(__version__, prog_name="knode")
 def cli():
-    """[KNode] Knowledge graph for Android codebases."""
+    """[knode] Knowledge graph for Android codebases."""
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ def index(project_path: str):
     project_path = os.path.abspath(project_path)
 
     console.print(Panel.fit(
-        f"[bold cyan]KNode[/bold cyan]  v{__version__}\n"
+        f"[bold cyan]knode[/bold cyan]  v{__version__}\n"
         f"[dim]Indexing:[/dim] [white]{project_path}[/white]",
         border_style="cyan",
     ))
@@ -106,7 +106,7 @@ def serve(project: str, port: int, host: str):
 
     url = f"http://{host}:{port}"
     console.print(Panel.fit(
-        f"[bold cyan]KNode Graph Browser[/bold cyan]\n"
+        f"[bold cyan]knode Graph Browser[/bold cyan]\n"
         f"[dim]Project:[/dim] [white]{project}[/white]\n"
         f"[dim]URL:[/dim]     [link={url}]{url}[/link]",
         border_style="cyan",

@@ -1,5 +1,5 @@
 """
-SQLite-backed storage for the KNode knowledge graph.
+SQLite-backed storage for the knode knowledge graph.
 All data is stored in .knode/graph.db inside the indexed project.
 """
 import json

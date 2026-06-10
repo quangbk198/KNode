@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
         _storage.close()
 
 
-app = FastAPI(title="KNode Graph Browser", lifespan=lifespan)
+app = FastAPI(title="knode Graph Browser", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
