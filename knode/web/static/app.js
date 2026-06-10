@@ -152,7 +152,7 @@ function initSigma() {
     }
   });
 
-  sigmaInst.on("clicknode", (e) => {
+  sigmaInst.on("clickNode", (e) => {
     focusNode(e.node);
   });
   
@@ -384,7 +384,9 @@ function focusNode(nodeId) {
   }, 350);
   
   const nodeData = graph.getNodeAttributes(nodeId);
-  showDetail(nodeData);
+  // Pass nodeId explicitly so showDetail doesn't rely on nodeData.id
+  // (Graphology attrs may not always preserve the id field reliably)
+  showDetail(nodeId, nodeData);
   showCodeViewer(nodeData.file_path, nodeData.line_number, nodeData.language);
   updateSelectedBar(nodeData);
   
@@ -402,7 +404,9 @@ function clearSelection() {
 function updateSelectedBar(nodeData) {
   const bar = document.getElementById("selected-bar");
   document.getElementById("selected-bar-name").textContent = nodeData.name;
-  document.getElementById("selected-bar-type").textContent = nodeData.type;
+  // nodeData.type is overridden to 'circle' by Sigma for rendering;
+  // the real node type is preserved in nodeData.nodeType
+  document.getElementById("selected-bar-type").textContent = nodeData.nodeType || nodeData.type;
   bar.classList.add("show");
 }
 
@@ -501,7 +505,8 @@ function selectSearchResult(node) {
 
 async function showDetailById(nodeId) {
   try {
-    const resp = await fetch(`/api/node/${nodeId}`);
+    const resp = await fetch(`/api/node/${encodeURIComponent(nodeId)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
     renderDetailPanel(data);
     document.getElementById("detail-panel").classList.add("open");
@@ -643,19 +648,26 @@ function buildEdgeLegend() {
 }
 
 // ── Node Detail Panel ─────────────────────────────────────────────────────────
-async function showDetail(nodeData) {
+// nodeId: the Graphology node key (reliable string)
+// nodeData: optional attrs pre-fetched from graph (for quick access to name etc.)
+async function showDetail(nodeId, nodeData) {
   const panel = document.getElementById("detail-panel");
   const body  = document.getElementById("detail-body");
   panel.classList.add("open");
   
   body.innerHTML = `<div style="color:var(--text-dim);font-size:13px;padding:20px 0;text-align:center;">Loading…</div>`;
   
+  // Use nodeId (the Graphology key) for the API call.
+  // nodeData.id may exist due to spread but nodeId is always guaranteed.
+  const idForApi = nodeId;
+  
   try {
-    const resp = await fetch(`/api/node/${nodeData.id}`);
+    const resp = await fetch(`/api/node/${encodeURIComponent(idForApi)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
     renderDetailPanel(data);
-  } catch {
-    body.innerHTML = `<div style="color:var(--text-dim);font-size:13px;">Failed to load node detail.</div>`;
+  } catch (err) {
+    body.innerHTML = `<div style="color:var(--text-dim);font-size:13px;">Failed to load node detail: ${err.message}</div>`;
   }
 }
 
